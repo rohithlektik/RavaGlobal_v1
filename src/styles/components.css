@@ -1,0 +1,282 @@
+/* Component-level styles that Tailwind can't express cleanly. */
+
+/* ---- Custom cursor ---- */
+.cursor-dot,
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: var(--z-cursor);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  will-change: transform;
+}
+.cursor-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--rava-light);
+}
+.cursor-ring {
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid rgba(140, 201, 235, 0.6);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--rava-abyss);
+  transition:
+    opacity 0.3s ease,
+    width 0.35s var(--ease-out-expo),
+    height 0.35s var(--ease-out-expo),
+    background-color 0.35s ease,
+    border-color 0.35s ease;
+}
+.cursor-ring svg {
+  opacity: 0;
+  transform: scale(0.4);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s var(--ease-out-expo);
+}
+.cursor-ring.is-hover {
+  width: 52px;
+  height: 52px;
+  border-color: rgba(140, 201, 235, 0.9);
+}
+.cursor-ring.is-cta {
+  width: 62px;
+  height: 62px;
+  background: var(--rava-light);
+  border-color: var(--rava-light);
+}
+.cursor-ring.is-cta svg {
+  opacity: 1;
+  transform: scale(1);
+}
+.cursor-ring.is-down {
+  transform: translate3d(var(--x, 0), var(--y, 0), 0) translate(-50%, -50%) scale(0.82);
+}
+
+/* ---- Loader ---- */
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-loader);
+  display: grid;
+  place-items: center;
+  background: var(--rava-abyss);
+  transition: opacity 0.8s var(--ease-out-expo), visibility 0.8s;
+}
+.loader.is-done {
+  opacity: 0;
+  visibility: hidden;
+}
+.loader__inner {
+  width: min(78vw, 340px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.6rem;
+}
+.loader__bar {
+  width: 100%;
+  height: 2px;
+  background: rgba(140, 201, 235, 0.16);
+  overflow: hidden;
+}
+.loader__fill {
+  height: 100%;
+  width: 0%;
+  background: var(--rava-light);
+  transition: width 0.4s var(--ease-out-quint);
+}
+.loader__pct {
+  font-family: var(--font-tech);
+  font-size: var(--step-label);
+  letter-spacing: 0.3em;
+  color: var(--text-dim);
+}
+
+/* ---- Fullscreen menu ---- */
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-menu);
+  background: var(--rava-abyss);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--gutter);
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 0.8s var(--ease-in-out-quart);
+}
+.menu-overlay.is-open {
+  clip-path: inset(0 0 0% 0);
+}
+.menu-link {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1.5rem;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(2.5rem, 1rem + 9vw, 7.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  opacity: 0;
+  transform: translateY(120%);
+  transition:
+    opacity 0.6s var(--ease-out-expo),
+    transform 0.7s var(--ease-out-expo),
+    color 0.3s ease;
+}
+.menu-overlay.is-open .menu-link {
+  opacity: 1;
+  transform: translateY(0);
+}
+.menu-link:hover {
+  color: var(--rava-light);
+}
+.menu-link__index {
+  font-family: var(--font-tech);
+  font-size: var(--step-label);
+  letter-spacing: 0.24em;
+  color: var(--text-faint);
+}
+
+/* ---- Magnetic button ---- */
+.btn {
+  --btn-fg: var(--rava-abyss);
+  --btn-bg: var(--rava-light);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  white-space: nowrap;
+  padding: 1.05rem 1.9rem;
+  font-family: var(--font-tech);
+  font-size: var(--step-label);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--btn-fg);
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-bg);
+  overflow: hidden;
+  will-change: transform;
+  transition: color 0.4s var(--ease-out-expo);
+}
+.btn > * {
+  position: relative;
+  z-index: 1;
+}
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--rava-pale);
+  transform: translateY(101%);
+  transition: transform 0.5s var(--ease-out-expo);
+  z-index: 0;
+}
+.btn:hover::after {
+  transform: translateY(0);
+}
+.btn--ghost {
+  --btn-fg: var(--rava-pale);
+  --btn-bg: transparent;
+  border-color: var(--line-strong);
+}
+[data-tone='light'] .btn--ghost {
+  --btn-fg: var(--rava-abyss);
+}
+[data-tone='light'] .btn--ghost::after {
+  background: rgba(59, 80, 112, 0.1);
+}
+.btn--ghost::after {
+  background: rgba(140, 201, 235, 0.12);
+}
+.btn--ghost:hover {
+  color: var(--rava-light);
+}
+.btn__arrow {
+  transition: transform 0.4s var(--ease-out-expo);
+}
+.btn:hover .btn__arrow {
+  transform: translateX(6px);
+}
+
+/* ---- Section rhythm ---- */
+.section {
+  position: relative;
+  padding-block: var(--section-pad);
+  padding-inline: var(--gutter);
+}
+
+/* Sections that host a 3D "stage": the copy lives in one column so the model
+ * has a clear zone. A soft brand wash keeps text legible over the scene. */
+.stage-copy {
+  position: relative;
+  z-index: 2;
+  max-width: min(46%, 40rem);
+}
+.stage-copy--right {
+  margin-left: auto;
+}
+.stage-copy::before {
+  content: '';
+  position: absolute;
+  inset: -2rem -3rem;
+  background: radial-gradient(
+    70% 90% at 30% 45%,
+    color-mix(in srgb, var(--rava-abyss) 78%, transparent),
+    transparent 75%
+  );
+  z-index: -1;
+  pointer-events: none;
+}
+@media (max-width: 960px) {
+  .stage-copy,
+  .stage-copy--right {
+    max-width: 100%;
+    margin-left: 0;
+  }
+}
+.section__index {
+  font-family: var(--font-tech);
+  font-size: var(--step-label);
+  letter-spacing: 0.3em;
+  color: var(--rava-light);
+}
+.rule {
+  height: 1px;
+  background: var(--line);
+  border: 0;
+  margin: 0;
+}
+
+/* ---- Scroll reveal ---- */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.9s var(--ease-out-expo),
+    transform 0.9s var(--ease-out-expo);
+}
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+  .menu-link {
+    opacity: 1;
+    transform: none;
+  }
+}

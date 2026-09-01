@@ -1,0 +1,128 @@
+/* ------------------------------------------------------------------ *
+ * RAVA BRAND SYSTEM — single source of truth
+ * Colours + type derived from the RAVA Group Brand Guidelines.
+ *   PANTONE 295 U  #3B5070   primary deep blue
+ *   PANTONE 297 U  #8CC9EB   light blue
+ *   white
+ * The 3D environment and UI never leave this tonal blue progression.
+ * ------------------------------------------------------------------ */
+
+/* --- Brand webfonts -------------------------------------------------- *
+ * DROP LICENSED FONT FILES HERE:  public/brand/fonts/
+ *   HelveticaNeue-Roman.woff2 / -Medium.woff2 / -Bold.woff2   (body)
+ *   DIN-Light.woff2                                           (technical labels)
+ * Until they land, the fallback stacks below carry the design.
+ * Roboto (display bold) is loaded from Google Fonts via <link> in index.html
+ * and is sanctioned by the guidelines.
+ * ------------------------------------------------------------------ */
+
+@font-face {
+  font-family: 'HelveticaNeue';
+  src: url('/brand/fonts/HelveticaNeue-Roman.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'HelveticaNeue';
+  src: url('/brand/fonts/HelveticaNeue-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'HelveticaNeue';
+  src: url('/brand/fonts/HelveticaNeue-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'HelveticaNeue';
+  src: url('/brand/fonts/HelveticaNeue-Black.woff2') format('woff2');
+  font-weight: 800 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'HelveticaNeue Light';
+  src: url('/brand/fonts/HelveticaNeue-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-display: swap;
+}
+
+:root {
+  /* Tonal blue progression — NO black anywhere. Darkest is a deep RAVA navy. */
+  --rava-white: #ffffff;
+  --rava-pale: #e8f4fb;
+  --rava-mist: #cfe6f5;
+  --rava-light: #8cc9eb; /* PANTONE 297 U */
+  --rava-sky: #5c9fd0;
+  --rava-blue: #3b5070; /* PANTONE 295 U — primary */
+  --rava-deep: #29405f;
+  --rava-navy: #1d3149;
+  --rava-abyss: #162740; /* darkest — still unmistakably blue */
+
+  /* Brand gradient used as the page ground instead of a flat dark */
+  --rava-gradient: linear-gradient(
+    170deg,
+    var(--rava-deep) 0%,
+    var(--rava-navy) 42%,
+    var(--rava-abyss) 100%
+  );
+
+  /* Roles */
+  --bg: var(--rava-abyss);
+  --bg-elevated: var(--rava-navy);
+  --surface: rgba(255, 255, 255, 0.05);
+  --text: var(--rava-pale);
+  --text-dim: rgba(232, 244, 251, 0.66);
+  --text-faint: rgba(232, 244, 251, 0.42);
+  --line: rgba(140, 201, 235, 0.18);
+  --line-strong: rgba(140, 201, 235, 0.36);
+  --accent: var(--rava-light);
+  --focus: var(--rava-light);
+
+  /* Type families — Helvetica Neue (licensed webfont supplied by client) */
+  --font-body: 'HelveticaNeue', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-display: 'HelveticaNeue', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-tech: 'HelveticaNeue Light', 'HelveticaNeue', 'Helvetica Neue', Arial, sans-serif;
+
+  /* Fluid type scale — restrained, editorial */
+  --step-hero: clamp(2.5rem, 1.3rem + 5vw, 6.25rem); /* ~40 -> 100px */
+  --step-title: clamp(1.9rem, 1.2rem + 2.6vw, 3.5rem); /* ~30 -> 56px */
+  --step-sub: clamp(1.375rem, 1rem + 1.4vw, 2rem); /* ~22 -> 32px */
+  --step-body: clamp(1rem, 0.95rem + 0.25vw, 1.1875rem); /* 16 -> 19 */
+  --step-label: clamp(0.6875rem, 0.64rem + 0.18vw, 0.8125rem); /* 11 -> 13 */
+
+  /* Spacing rhythm */
+  --gutter: clamp(1.25rem, 0.6rem + 3vw, 4rem);
+  --section-pad: clamp(4.5rem, 2rem + 10vw, 12rem);
+
+  /* Motion — heavy, precise, intentional */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 0.28s;
+  --dur-mid: 0.6s;
+  --dur-slow: 1.1s;
+
+  --z-canvas: 0;
+  --z-content: 10;
+  --z-nav: 40;
+  --z-menu: 50;
+  --z-cursor: 90;
+  --z-loader: 100;
+}
+
+@theme inline {
+  --color-rava-white: var(--rava-white);
+  --color-rava-pale: var(--rava-pale);
+  --color-rava-mist: var(--rava-mist);
+  --color-rava-light: var(--rava-light);
+  --color-rava-sky: var(--rava-sky);
+  --color-rava-blue: var(--rava-blue);
+  --color-rava-deep: var(--rava-deep);
+  --color-rava-navy: var(--rava-navy);
+  --color-rava-abyss: var(--rava-abyss);
+
+  --font-body: var(--font-body);
+  --font-display: var(--font-display);
+  --font-tech: var(--font-tech);
+}
