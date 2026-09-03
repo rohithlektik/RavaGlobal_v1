@@ -641,7 +641,10 @@
 .section-scrim {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  /* behind every section child (incl. the SectionShell eyebrow) but still in
+     front of the fixed 3D canvas — so it darkens the scene for legibility
+     without covering the "04 Products & equipment" label */
+  z-index: -1;
   pointer-events: none;
   background:
     radial-gradient(
@@ -673,10 +676,11 @@
 .products-list__name {
   transform-origin: left center;
   color: var(--text-dim);
+  will-change: font-size, color;
   transition:
-    font-size 0.4s var(--ease-out-expo),
-    color 0.4s ease,
-    letter-spacing 0.4s var(--ease-out-expo);
+    font-size 0.3s var(--ease-out-expo),
+    color 0.3s ease,
+    letter-spacing 0.3s var(--ease-out-expo);
 }
 .products-list__name.is-active {
   font-size: calc(var(--step-sub) * 1.5);

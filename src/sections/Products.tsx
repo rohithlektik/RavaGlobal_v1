@@ -5,11 +5,12 @@ import { MagneticButton } from '@/components/MagneticButton';
 import { useScene } from '@/store/scene';
 
 export function Products() {
-  // mirror the 3D rail's active index so the matching title can lift — only
-  // while the section actually owns the viewport
+  // mirror the 3D rail's active index so the matching title lifts. Gate on the
+  // section's own scrub progress (strictly mid-section) rather than `active`,
+  // which lags at section boundaries and made the highlight drop out.
   const p = useScene((s) => s.sections['products'] ?? 0);
-  const isHere = useScene((s) => s.active === 'products');
-  const activeIdx = isHere ? Math.round(p * (products.length - 1)) : -1;
+  const activeIdx =
+    p > 0.008 && p < 0.992 ? Math.round(p * (products.length - 1)) : -1;
 
   return (
     <SectionShell

@@ -88,7 +88,7 @@ export function RentBuy() {
             duration and location — with the same 24/7 service either way.
           </Reveal>
           <Reveal className="mt-10">
-            <MagneticButton href="#quote">Compare my options</MagneticButton>
+            <MagneticButton href="/quote">Compare my options</MagneticButton>
           </Reveal>
         </div>
 

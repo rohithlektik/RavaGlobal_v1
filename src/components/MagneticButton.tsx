@@ -1,4 +1,5 @@
 import { useRef, type ReactNode, type MouseEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useScene } from '@/store/scene';
 
 interface Props {
@@ -23,6 +24,18 @@ export function MagneticButton({
 }: Props) {
   const ref = useRef<HTMLAnchorElement & HTMLButtonElement>(null);
   const reducedMotion = useScene((s) => s.reducedMotion);
+  const navigate = useNavigate();
+
+  // an in-app route ("/quote") navigates via the router; "#anchor" and external
+  // hrefs behave as normal links
+  const isRoute = !!href && href.startsWith('/');
+  const onLinkClick = (e: MouseEvent) => {
+    if (isRoute && href) {
+      e.preventDefault();
+      navigate(href);
+    }
+    onClick?.();
+  };
 
   const onMove = (e: MouseEvent) => {
     if (reducedMotion || !ref.current) return;
@@ -55,6 +68,7 @@ export function MagneticButton({
         className={cls}
         data-cursor="cta"
         aria-label={ariaLabel}
+        onClick={onLinkClick}
         onMouseMove={onMove}
         onMouseLeave={reset}
       >

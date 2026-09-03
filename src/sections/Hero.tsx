@@ -106,7 +106,7 @@ export function Hero() {
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-4">
             <MagneticButton href="#solutions">Explore Solutions</MagneticButton>
-            <MagneticButton href="#quote" variant="ghost">
+            <MagneticButton href="/quote" variant="ghost">
               Get a Quote
             </MagneticButton>
           </div>

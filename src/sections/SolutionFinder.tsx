@@ -64,7 +64,7 @@ export function SolutionFinder() {
 
             {done && (
               <div className="mt-9 flex flex-wrap items-center gap-4">
-                <MagneticButton href="#quote">{finderResult.cta}</MagneticButton>
+                <MagneticButton href="/quote">{finderResult.cta}</MagneticButton>
                 <button
                   type="button"
                   className="tech-label text-[var(--rava-mist)] underline underline-offset-4"

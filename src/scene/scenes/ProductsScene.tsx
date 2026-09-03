@@ -2,6 +2,7 @@ import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useTexture, useGLTF } from '@react-three/drei';
 import {
+  BackSide,
   Color,
   Group,
   type Mesh,
@@ -66,18 +67,18 @@ function GlbReefer({ frost = false }: { frost?: boolean }) {
         />
       </mesh>
       {frost && (
-        <>
-          <mesh>
-            <boxGeometry args={[2.55, 2.75, 6.9]} />
-            <meshStandardMaterial
-              color={RAVA.mist}
-              transparent
-              opacity={0.12}
-              roughness={1}
-              depthWrite={false}
-            />
-          </mesh>
-        </>
+        <mesh renderOrder={-1}>
+          <boxGeometry args={[2.62, 2.82, 6.98]} />
+          {/* back faces only + no depth write — a still inner frost haze that
+              can't sort-flicker against the container as the model rotates */}
+          <meshBasicMaterial
+            color={RAVA.mist}
+            transparent
+            opacity={0.1}
+            side={BackSide}
+            depthWrite={false}
+          />
+        </mesh>
       )}
     </group>
   );
@@ -126,9 +127,15 @@ function Reefer({ steel, frost = false }: { steel: Steel; frost?: boolean }) {
         <meshStandardMaterial map={logo} transparent roughness={0.7} />
       </mesh>
       {frost && (
-        <mesh>
-          <boxGeometry args={[7.05, 2.55, 2.5]} />
-          <meshStandardMaterial color={RAVA.mist} transparent opacity={0.14} roughness={1} />
+        <mesh renderOrder={-1}>
+          <boxGeometry args={[7.12, 2.6, 2.56]} />
+          <meshBasicMaterial
+            color={RAVA.mist}
+            transparent
+            opacity={0.12}
+            side={BackSide}
+            depthWrite={false}
+          />
         </mesh>
       )}
     </group>
@@ -273,13 +280,19 @@ export function ProductsScene() {
         1 - Math.exp(-6 * Math.min(dt, 0.05)),
       );
     }
+    const k = 1 - Math.exp(-9 * Math.min(dt, 0.05));
     models.current.forEach((g, i) => {
       if (!g) return;
-      g.rotation.y += dt * 0.14;
       const d = Math.abs(i - activeF);
+      // only render the active model + its immediate neighbours — models
+      // sliding through the frame edges were shimmering as they passed
+      const on = d < 1.85;
+      g.visible = on;
+      if (!on) return;
+      g.rotation.y += dt * 0.14;
       const s = lerp(0.68, 1, clamp(1 - d));
-      g.scale.setScalar(lerp(g.scale.x, s, 0.1));
-      g.position.y = lerp(g.position.y, MathUtils.degToRad(d < 0.5 ? 0 : 6) * 2, 0.1);
+      g.scale.setScalar(lerp(g.scale.x, s, k));
+      g.position.y = lerp(g.position.y, MathUtils.degToRad(d < 0.5 ? 0 : 6) * 2, k);
     });
   });
 

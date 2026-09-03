@@ -2,7 +2,6 @@ import { useRef } from 'react';
 import { useSectionScrub } from '@/hooks/useSectionScrub';
 import { Reveal } from '@/components/Reveal';
 import { MagneticButton } from '@/components/MagneticButton';
-import { company } from '@/data/company';
 
 export function FinalCTA() {
   const ref = useRef<HTMLElement>(null);
@@ -19,8 +18,8 @@ export function FinalCTA() {
         Ready to build your solution?
       </Reveal>
       <Reveal className="mt-8 flex flex-wrap items-center justify-center gap-4">
-        <MagneticButton href="#quote">Get a Quote</MagneticButton>
-        <MagneticButton href={company.phoneHref} variant="ghost">
+        <MagneticButton href="/quote">Get a Quote</MagneticButton>
+        <MagneticButton href="/quote" variant="ghost">
           Talk to RAVA
         </MagneticButton>
       </Reveal>
