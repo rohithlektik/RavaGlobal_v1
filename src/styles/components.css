@@ -1203,3 +1203,150 @@
     padding: 0;
   }
 }
+
+/* ============================================================
+   09 — Closing CTA : cinematic brand-coloured animated backdrop
+   (drifting light blooms + slow sheen + fine grain). No video.
+   ============================================================ */
+.solution-cta {
+  isolation: isolate;
+  background: radial-gradient(125% 95% at 50% -12%, #23385b 0%, #14243c 55%, #0d1a2c 100%);
+}
+.solution-cta.section {
+  padding-block: clamp(5rem, 3rem + 8vw, 10rem);
+}
+.solution-cta__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  contain: strict;
+  pointer-events: none;
+}
+.solution-cta__bg::after {
+  /* vignette so the centred copy always reads over the blooms */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(78% 62% at 50% 44%, transparent 0%, rgba(10, 19, 32, 0.6) 100%);
+}
+.solution-cta__bloom {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+.solution-cta__bloom--a {
+  width: 640px;
+  height: 640px;
+  top: -18%;
+  left: 10%;
+  background: radial-gradient(circle, rgba(92, 159, 208, 0.7), transparent 64%); /* rava sky */
+  animation: cta-drift-a 26s ease-in-out infinite alternate;
+}
+.solution-cta__bloom--b {
+  width: 560px;
+  height: 560px;
+  bottom: -16%;
+  right: 12%;
+  background: radial-gradient(circle, rgba(59, 80, 112, 0.78), transparent 66%); /* rava blue */
+  animation: cta-drift-b 32s ease-in-out infinite alternate;
+}
+.solution-cta__bloom--c {
+  width: 420px;
+  height: 420px;
+  top: 30%;
+  left: 44%;
+  background: radial-gradient(circle, rgba(140, 201, 235, 0.34), transparent 60%); /* rava light */
+  animation: cta-drift-c 22s ease-in-out infinite alternate;
+}
+@keyframes cta-drift-a {
+  to {
+    transform: translate3d(80px, 62px, 0) scale(1.15);
+  }
+}
+@keyframes cta-drift-b {
+  to {
+    transform: translate3d(-90px, -52px, 0) scale(1.1);
+  }
+}
+@keyframes cta-drift-c {
+  to {
+    transform: translate3d(44px, -70px, 0) scale(0.82);
+  }
+}
+.solution-cta__sweep {
+  position: absolute;
+  inset: -35% -12%;
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    transparent 0deg,
+    rgba(140, 201, 235, 0.1) 38deg,
+    transparent 120deg,
+    transparent 360deg
+  );
+  mix-blend-mode: screen;
+  animation: cta-spin 46s linear infinite;
+  will-change: transform;
+}
+@keyframes cta-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.solution-cta__grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 140px 140px;
+}
+.solution-cta__inner {
+  position: relative;
+  z-index: 1;
+  max-width: 60rem;
+  padding-inline: var(--gutter);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(1.15rem, 0.9rem + 1.4vw, 2.1rem);
+}
+.solution-cta__eyebrow {
+  font-family: var(--font-tech);
+  font-size: var(--step-label);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--rava-light);
+}
+.solution-cta__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2.6rem, 1.3rem + 6vw, 6rem);
+  line-height: 0.94;
+  letter-spacing: -0.03em;
+  background: linear-gradient(180deg, #ffffff 0%, #ffffff 44%, #c3d9ef 100%); /* white -> rava mist */
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.solution-cta__sub {
+  max-width: 40rem;
+  font-size: clamp(1rem, 0.95rem + 0.4vw, 1.2rem);
+  line-height: 1.6;
+  color: rgba(232, 244, 251, 0.72);
+}
+.solution-cta__actions {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .solution-cta__bloom,
+  .solution-cta__sweep {
+    animation: none;
+  }
+}
