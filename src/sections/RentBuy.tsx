@@ -1,55 +1,110 @@
+import { useEffect, useRef } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SectionShell } from './SectionShell';
 import { Reveal } from '@/components/Reveal';
 import { MagneticButton } from '@/components/MagneticButton';
+import { RentBuyGlyph } from '@/components/RentBuyGlyph';
+import { useScene } from '@/store/scene';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const PATHS = [
   {
     key: 'Rent',
+    glyph: 'rent' as const,
     lead: 'Flexibility, speed, capacity for now.',
-    points: ['Short-term spikes', 'Seasonal demand', 'Emergency response', 'Delivered ready to run'],
   },
   {
     key: 'Buy',
+    glyph: 'buy' as const,
     lead: 'Ownership, permanence, infrastructure to build on.',
-    points: ['Ongoing capacity', 'Permanent siting', 'Long-term economics', 'An asset on the books'],
   },
 ];
 
+/**
+ * 06 — Rent or Buy. Two-column: the framing copy on the left, the Rent and Buy
+ * cards stacked as separate rows on the right. A light scroll-parallax drifts
+ * the glyphs; the copy stays put.
+ */
 export function RentBuy() {
+  const cardsRef = useRef<HTMLDivElement>(null);
+  const reducedMotion = useScene((s) => s.reducedMotion);
+
+  useEffect(() => {
+    const el = cardsRef.current;
+    if (!el) return;
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) e.target.classList.add('is-in');
+        });
+      },
+      { threshold: 0.3 },
+    );
+    el.querySelectorAll('.deploy-card').forEach((c) => io.observe(c));
+
+    if (reducedMotion) return () => io.disconnect();
+
+    const ctx = gsap.context(() => {
+      ScrollTrigger.create({
+        trigger: el,
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: true,
+        onUpdate: (self) => {
+          el.style.setProperty('--par', String((self.progress - 0.5) * 2)); // -1 .. 1
+        },
+      });
+    }, el);
+    return () => {
+      io.disconnect();
+      ctx.revert();
+    };
+  }, [reducedMotion]);
+
   return (
-    <SectionShell id="rent-buy" anchor="rent-buy" index="06" label="Rent or buy" minH="130vh" tone="light">
-      <Reveal as="h2" className="max-w-3xl text-[var(--step-title)]">
-        How do you want to deploy it?
-      </Reveal>
-      <Reveal className="mt-6 max-w-xl text-[var(--text-dim)]">
-        RAVA won&rsquo;t assume rent or buy is better for you. We compare both against your
-        duration and location — with the same 24/7 service either way.
-      </Reveal>
-
-      <div className="mt-16 grid gap-px overflow-hidden border border-[var(--line-strong)] bg-[var(--line-strong)] md:grid-cols-2">
-        {PATHS.map((p, i) => (
+    <SectionShell
+      id="rent-buy"
+      anchor="rent-buy"
+      index="06"
+      label="Rent or buy"
+      minH="100vh"
+      tone="light"
+      className="section--tight deploy"
+    >
+      <div className="deploy-grid">
+        <div className="deploy-intro">
           <Reveal
-            key={p.key}
-            delay={i * 90}
-            className="group flex flex-col justify-between bg-[var(--rava-white)] p-10 transition-colors duration-500 hover:bg-[rgba(59,80,112,0.04)]"
+            as="h2"
+            className="leading-[1.12] tracking-[-0.01em]"
+            style={{ fontSize: 'clamp(1.5rem, 1.05rem + 1.6vw, 2.4rem)', fontWeight: 400 }}
           >
-            <div>
-              <h3 className="text-[clamp(2.25rem,1rem+4vw,4rem)] font-black leading-none">{p.key}</h3>
-              <p className="mt-4 text-[var(--step-sub)] text-[var(--rava-blue)]">{p.lead}</p>
-              <ul className="mt-8 space-y-2 text-[var(--text-dim)]">
-                {p.points.map((pt) => (
-                  <li key={pt} className="border-l border-[var(--line-strong)] pl-3">
-                    {pt}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            How do you want to deploy it?
           </Reveal>
-        ))}
-      </div>
+          <Reveal className="mt-5 text-[var(--text-dim)]">
+            RAVA won&rsquo;t assume rent or buy is better for you. We compare both against your
+            duration and location — with the same 24/7 service either way.
+          </Reveal>
+          <Reveal className="mt-10">
+            <MagneticButton href="#quote">Compare my options</MagneticButton>
+          </Reveal>
+        </div>
 
-      <div className="mt-12">
-        <MagneticButton href="#quote">Compare my options</MagneticButton>
+        <div ref={cardsRef} className="deploy-cards">
+          {PATHS.map((p, i) => (
+            <article key={p.key} className="deploy-card" style={{ ['--i' as string]: i }}>
+              <div className="deploy-card__glyph">
+                <RentBuyGlyph name={p.glyph} />
+              </div>
+              <div className="deploy-card__body">
+                <h3 className="deploy-card__title">{p.key}</h3>
+                <p className="deploy-card__lead">{p.lead}</p>
+              </div>
+            </article>
+          ))}
+        </div>
       </div>
     </SectionShell>
   );

@@ -9,7 +9,7 @@ interface Props {
  * `white` is the guidelines-sanctioned 1-colour treatment for dark surfaces.
  */
 export function Logo({ variant = 'white', className = '', height = 44 }: Props) {
-  const src = variant === 'white' ? '/brand/rava-logo-white.png' : '/brand/rava-logo.png';
+  const src = variant === 'white' ? '/brand/rava-logo-white.png' : '/brand/rava-logo-hi.png';
   return (
     <img
       src={src}

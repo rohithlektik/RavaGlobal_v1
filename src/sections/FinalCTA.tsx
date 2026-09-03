@@ -12,7 +12,7 @@ export function FinalCTA() {
     <section
       ref={ref}
       id="quote"
-      className="section flex min-h-screen flex-col items-center justify-center text-center"
+      className="section relative z-[1] flex min-h-screen flex-col items-center justify-center bg-[var(--rava-abyss)] text-center"
       aria-labelledby="quote-title"
     >
       <Reveal as="h2" className="max-w-4xl text-[var(--step-hero)] leading-[0.95]">

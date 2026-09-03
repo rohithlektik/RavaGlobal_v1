@@ -1,42 +1,89 @@
+import { useEffect, useRef } from 'react';
 import { SectionShell } from './SectionShell';
 import { Reveal } from '@/components/Reveal';
+import { SpinReveal } from '@/components/SpinReveal';
 
 const PILLARS = [
-  { k: 'Equipment', d: 'Refrigerated and dry containers, blast freezers, gensets and chassis.' },
-  { k: 'Delivery', d: 'Positioned, delivered and commissioned so day one is covered.' },
-  { k: 'Power', d: 'Gensets sized to the load where the grid can&rsquo;t reach.' },
-  { k: 'Parts', d: 'In-house stock for Carrier, Thermo King, Daikin, Star Cool and Taylor.' },
-  { k: 'Technicians', d: 'Factory-trained, dispatched across the service area.' },
-  { k: '24/7 support', d: 'Around the clock, 365 days a year — a real person answers.' },
+  {
+    k: 'Equipment',
+    d: 'Refrigerated and dry containers, blast freezers, gensets and chassis.',
+    icon: 'container',
+  },
+  {
+    k: 'Delivery',
+    d: 'Positioned, delivered and commissioned so day one is covered.',
+    icon: 'truck',
+  },
+  { k: 'Power', d: 'Gensets sized to the load where the grid can&rsquo;t reach.', icon: 'bolt' },
+  {
+    k: 'Parts',
+    d: 'In-house stock for Carrier, Thermo King, Daikin, Star Cool and Taylor.',
+    icon: 'gear',
+  },
+  { k: 'Technicians', d: 'Factory-trained, dispatched across the service area.', icon: 'wrench' },
+  {
+    k: '24/7 support',
+    d: 'Around the clock, 365 days a year &mdash; a real person answers.',
+    icon: 'clock',
+  },
 ];
 
 export function RavaWorld() {
+  const listRef = useRef<HTMLUListElement>(null);
+
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const items = Array.from(el.querySelectorAll<HTMLElement>('.world-item'));
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add('is-in');
+            io.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.28, rootMargin: '0px 0px -10% 0px' },
+    );
+    items.forEach((it) => io.observe(it));
+    return () => io.disconnect();
+  }, []);
+
   return (
-    <SectionShell id="world" anchor="world" index="02" label="The RAVA world" minH="140vh" tone="light">
-      <div className="grid gap-16 lg:grid-cols-[1.1fr_0.9fr] lg:gap-24">
-        <Reveal as="h2" className="text-[var(--step-title)]">
-          More than containers.
-          <br />
-          <span className="text-[var(--rava-blue)]">Engineered solutions.</span>
-        </Reveal>
-        <Reveal className="self-end text-[var(--text-dim)]">
-          RAVA is not simply selling containers. RAVA builds the infrastructure that stores,
-          protects and moves critical operations — and stands behind it every hour of every day.
-        </Reveal>
-      </div>
+    <SectionShell
+      id="world"
+      anchor="world"
+      index="02"
+      label="The RAVA world"
+      minH="100vh"
+      tone="light"
+      className="section--tight"
+    >
+      <Reveal
+        as="h2"
+        className="leading-[1.1] tracking-[-0.01em]"
+        style={{ fontSize: 'clamp(2rem, 1.1rem + 3vw, 3.6rem)', fontWeight: 400 }}
+      >
+        More than containers.{' '}
+        <span className="text-[var(--rava-blue)]">Engineered solutions.</span>
+      </Reveal>
 
-      <hr className="rule my-16" />
+      <hr className="rule" style={{ margin: '30px 0' }} />
 
-      <ul className="grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+      <ul ref={listRef} className="world-grid">
         {PILLARS.map((p, i) => (
-          <Reveal as="li" key={p.k} delay={i * 60}>
-            <span className="section__index">0{i + 1}</span>
-            <h3 className="mt-3 text-[var(--step-sub)] font-black">{p.k}</h3>
-            <p
-              className="mt-2 max-w-xs text-[var(--text-dim)]"
-              dangerouslySetInnerHTML={{ __html: p.d }}
-            />
-          </Reveal>
+          <li key={p.k} className="world-item" style={{ ['--i' as string]: i }}>
+            <SpinReveal icon={p.icon} />
+            <div className="world-item__body">
+              <span className="world-item__num">0{i + 1}</span>
+              <h3 className="mt-2 text-[var(--step-sub)] font-black">{p.k}</h3>
+              <p
+                className="mt-2 max-w-xs text-[var(--text-dim)]"
+                dangerouslySetInnerHTML={{ __html: p.d }}
+              />
+            </div>
+          </li>
         ))}
       </ul>
     </SectionShell>

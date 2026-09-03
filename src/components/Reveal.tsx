@@ -1,14 +1,15 @@
-import { useEffect, useRef, type ElementType, type ReactNode } from 'react';
+import { useEffect, useRef, type CSSProperties, type ElementType, type ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
   as?: ElementType;
   delay?: number;
   className?: string;
+  style?: CSSProperties;
 }
 
 /** Lightweight scroll-into-view reveal via IntersectionObserver + CSS. */
-export function Reveal({ children, as: Tag = 'div', delay = 0, className = '' }: Props) {
+export function Reveal({ children, as: Tag = 'div', delay = 0, className = '', style }: Props) {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -29,7 +30,7 @@ export function Reveal({ children, as: Tag = 'div', delay = 0, className = '' }:
   }, [delay]);
 
   return (
-    <Tag ref={ref} className={`reveal ${className}`}>
+    <Tag ref={ref} className={`reveal ${className}`} style={style}>
       {children}
     </Tag>
   );

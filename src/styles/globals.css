@@ -124,6 +124,88 @@ img {
   transform: translateZ(0);
 }
 
+/* The hero doesn't end — it compresses into a cinematic product stage. Four
+ * fixed bars grow inward from the viewport edges to frame a near-square region
+ * on the right where the live WebGL container keeps rendering. Pure transform
+ * animation on its own GPU layer -> no layout, no flicker, fully reversible.
+ * Sits above the canvas, below the scrolling copy. */
+.stage-frame {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-stage);
+  pointer-events: none;
+  transform: translateZ(0);
+}
+.stage-bar {
+  position: absolute;
+  background: var(--stage-surround, #0a1522);
+  will-change: transform;
+  transform: scale(0);
+}
+.stage-bar--l {
+  left: 0;
+  top: 0;
+  bottom: 0;
+  transform-origin: left center;
+}
+.stage-bar--r {
+  right: 0;
+  top: 0;
+  bottom: 0;
+  transform-origin: right center;
+}
+.stage-bar--t {
+  top: 0;
+  left: 0;
+  right: 0;
+  transform-origin: center top;
+}
+.stage-bar--b {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  transform-origin: center bottom;
+}
+
+/* The statement copy — a fixed overlay pinned in the cleared left column beside
+ * the square stage. Lives outside .content-layer so it can actually pin. */
+.statement-stage {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: min(45vw, calc(100vw - 460px));
+  display: flex;
+  align-items: center;
+  padding: 0 var(--gutter);
+  z-index: var(--z-stage-copy);
+  pointer-events: none;
+  transform: translateZ(0);
+}
+.statement-stage__inner {
+  max-width: min(34rem, 40vw);
+}
+.statement-stage__head {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--stage-text, var(--rava-pale));
+  font-size: clamp(1.35rem, 0.9rem + 1.7vw, 2.1rem);
+  line-height: 1.18;
+  letter-spacing: -0.005em;
+}
+.statement-stage__head .accent {
+  color: var(--stage-accent, var(--rava-light));
+}
+.statement-stage__body {
+  margin-top: 1.6rem;
+  max-width: 46ch;
+  font-family: var(--font-display);
+  font-weight: 400;
+  color: var(--stage-text, var(--rava-pale));
+  font-size: var(--step-body);
+  line-height: 1.62;
+}
+
 /* Reduced motion: strip choreography, keep legibility */
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -29,23 +29,21 @@ await MeshoptSimplifier.ready;
 const io = new NodeIO();
 const doc = await io.read(SRC);
 
-await doc.transform(
-  weld({ tolerance: 0.0001 }),
-  simplify({ simplifier: MeshoptSimplifier, ratio: 0.5, error: 0.006 }),
-  prune(),
-);
+// NOTE: textures are assigned FIRST (below). prune() must run only after the
+// materials reference a base-colour texture, otherwise it treats TEXCOORD_0 as
+// unused and strips the UVs — which leaves the model untextured. weld/simplify
+// then run with the maps in place so the UV set is carried through.
 
 // ---- texture builders ----------------------------------------------------
 const RAVA = { r: 168, g: 180, b: 196 }; // cool blue-grey the body reads as
 
-async function baseColor(mat, size, tint) {
-  let img = sharp(join(TEX, `${mat}_Diffuse.png`)).resize(size, size);
-  if (tint) {
-    img = img.modulate({ saturation: 0.32, brightness: 1.02 }).tint(RAVA);
-  } else {
-    img = img.modulate({ saturation: 0.7 });
-  }
-  return img.jpeg({ quality: 86 }).toBuffer();
+async function baseColor(mat, size, _tint) {
+  // faithful — use the purchased textures as-is (white steel, blue Carrier unit,
+  // container markings). The RAVA logo goes on as a decal on top.
+  return sharp(join(TEX, `${mat}_Diffuse.png`))
+    .resize(size, size)
+    .jpeg({ quality: 88 })
+    .toBuffer();
 }
 async function normal(mat, size) {
   return sharp(join(TEX, `${mat}_Normal.png`)).resize(size, size).jpeg({ quality: 92 }).toBuffer();
@@ -111,7 +109,25 @@ for (const m of doc.getRoot().listMaterials()) {
   console.log('  assigned', name);
 }
 
-await prune()(doc);
+// now that every material carries its maps, it is safe to weld / simplify /
+// prune — the UV set is referenced and will be preserved.
+await doc.transform(
+  weld({ tolerance: 0.0001 }),
+  simplify({ simplifier: MeshoptSimplifier, ratio: 0.5, error: 0.005 }),
+  prune(),
+);
+
+// sanity: every textured primitive must still have UVs
+for (const mesh of doc.getRoot().listMeshes()) {
+  for (const prim of mesh.listPrimitives()) {
+    const hasUV = !!prim.getAttribute('TEXCOORD_0');
+    const hasTex = !!prim.getMaterial()?.getBaseColorTexture();
+    if (hasTex && !hasUV) {
+      throw new Error(`UVs lost on ${mesh.getName()} after simplify/prune`);
+    }
+  }
+}
+
 await io.write(OUT, doc);
 const fs = await import('node:fs');
 console.log('wrote', OUT, (fs.statSync(OUT).size / 1e6).toFixed(2), 'MB');

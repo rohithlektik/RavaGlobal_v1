@@ -8,7 +8,6 @@ export type SectionId =
   | 'products'
   | 'industries'
   | 'rent-buy'
-  | 'service'
   | 'coverage'
   | 'final';
 
@@ -60,6 +59,10 @@ export const useScene = create<SceneState>((set) => ({
   setTier: (t) => set({ tier: t }),
   setReducedMotion: (v) => set({ reducedMotion: v }),
 }));
+
+if (import.meta.env.DEV && typeof window !== 'undefined') {
+  (window as unknown as { __scene?: typeof useScene }).__scene = useScene;
+}
 
 /** Non-reactive read for use inside useFrame. */
 export const sceneState = () => useScene.getState();

@@ -1,8 +1,10 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useScene } from '@/store/scene';
 import { useSectionScrub } from '@/hooks/useSectionScrub';
 import { finderSteps, finderResult } from '@/data/solutionFinder';
+import { solutionState } from '@/scene/solutionState';
 import { MagneticButton } from '@/components/MagneticButton';
+import { FinderIcon } from '@/components/FinderIcon';
 
 export function SolutionFinder() {
   const ref = useRef<HTMLElement>(null);
@@ -12,6 +14,12 @@ export function SolutionFinder() {
   const [step, setStep] = useState(0);
   const [picks, setPicks] = useState<string[]>([]);
   const done = step >= finderSteps.length;
+
+  // container is only a faint outline while answering; revealed on "Recommended"
+  useEffect(() => {
+    solutionState.reveal = done ? 1 : 0;
+  }, [done]);
+  useEffect(() => () => void (solutionState.reveal = 0), []);
 
   const choose = (label: string, env: string) => {
     const next = [...picks.slice(0, step), label];
@@ -28,84 +36,101 @@ export function SolutionFinder() {
   const current = finderSteps[Math.min(step, finderSteps.length - 1)];
 
   return (
-    <section ref={ref} id="solutions" className="section" aria-labelledby="solutions-title">
-      <div className="mb-10 flex items-center gap-4">
-        <span className="section__index">03</span>
-        <span className="tech-label">Find your RAVA solution</span>
-      </div>
+    <section ref={ref} id="solutions" className="section finder" aria-labelledby="solutions-title">
+      {/* legibility scrim — the container behind is only an outline while
+          answering, but keep the copy crisp regardless of what is on screen */}
+      <div className="finder__scrim" aria-hidden="true" />
 
-      <div className="grid gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-24">
-        <div>
-          <h2 id="solutions-title" className="text-[var(--step-title)]">
-            {done ? finderResult.title : current.question}
-          </h2>
-          <p className="mt-6 max-w-md text-[var(--text-dim)]">
-            {done
-              ? finderResult.body
-              : 'Start with the operation, not the equipment. Three questions — the world around the container changes with each answer.'}
-          </p>
-
-          {done && (
-            <div className="mt-9 flex flex-wrap items-center gap-4">
-              <MagneticButton href="#quote">{finderResult.cta}</MagneticButton>
-              <button type="button" className="tech-label underline underline-offset-4" onClick={reset}>
-                Start over
-              </button>
-            </div>
-          )}
-
-          <ol className="mt-12 flex gap-3" aria-label="Progress">
-            {finderSteps.map((s, i) => (
-              <li
-                key={s.id}
-                className="h-1 flex-1 bg-[var(--line)]"
-                style={{ background: i < step ? 'var(--rava-light)' : undefined }}
-              />
-            ))}
-          </ol>
+      <div className="finder__inner">
+        <div className="mb-10 flex items-center gap-4">
+          <span className="section__index">03</span>
+          <span className="tech-label">Find your RAVA solution</span>
         </div>
 
-        <div>
-          {!done && (
-            <ul className="grid gap-3 sm:grid-cols-2">
-              {current.options.map((o) => {
-                const selected = picks[step] === o.label;
-                return (
-                  <li key={o.label}>
-                    <button
-                      type="button"
-                      onClick={() => choose(o.label, o.env)}
-                      className="group flex w-full flex-col gap-2 border border-[var(--line)] p-5 text-left transition-colors duration-300 hover:border-[var(--line-strong)] hover:bg-[rgba(140,201,235,0.06)]"
-                      style={selected ? { borderColor: 'var(--rava-light)' } : undefined}
-                      aria-pressed={selected}
-                    >
-                      <span className="text-[var(--step-sub)] font-black leading-none">{o.label}</span>
-                      <span className="text-[var(--step-label)] leading-snug text-[var(--text-dim)]">
-                        {o.note}
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+        <div className="grid gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-24">
+          <div>
+            <h2
+              id="solutions-title"
+              className="leading-[1.12] tracking-[-0.01em] text-[var(--rava-pale)]"
+              style={{ fontSize: 'clamp(1.7rem, 1rem + 2.4vw, 2.9rem)', fontWeight: 400 }}
+            >
+              {done ? finderResult.title : current.question}
+            </h2>
+            <p className="mt-6 max-w-md text-[var(--rava-mist)]" style={{ fontSize: '1rem', lineHeight: 1.6 }}>
+              {done
+                ? finderResult.body
+                : 'Start with the operation, not the equipment. Three questions — the world around the container changes with each answer.'}
+            </p>
 
-          {done && (
-            <div className="border border-[var(--line-strong)] p-8">
-              <p className="tech-label">Recommended</p>
-              <p className="mt-3 text-[var(--step-sub)] font-black">
-                Temperature-controlled RAVA unit
-              </p>
-              <dl className="mt-6 grid grid-cols-2 gap-4 text-[var(--step-label)]">
-                {picks.map((p, i) => (
-                  <div key={i}>
-                    <dt className="text-[var(--text-faint)]">{finderSteps[i].question}</dt>
-                    <dd className="mt-1 text-[var(--text)]">{p}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          )}
+            {done && (
+              <div className="mt-9 flex flex-wrap items-center gap-4">
+                <MagneticButton href="#quote">{finderResult.cta}</MagneticButton>
+                <button
+                  type="button"
+                  className="tech-label text-[var(--rava-mist)] underline underline-offset-4"
+                  onClick={reset}
+                >
+                  Start over
+                </button>
+              </div>
+            )}
+
+            <ol className="finder__progress" aria-label={`Step ${Math.min(step + 1, finderSteps.length)} of ${finderSteps.length}`}>
+              {finderSteps.map((s, i) => (
+                <li key={s.id} data-state={i < step ? 'done' : i === step ? 'active' : 'idle'} />
+              ))}
+            </ol>
+          </div>
+
+          <div>
+            {!done && (
+              <ul className="finder__options">
+                {current.options.map((o) => {
+                  const selected = picks[step] === o.label;
+                  return (
+                    <li key={o.label}>
+                      <button
+                        type="button"
+                        onClick={() => choose(o.label, o.env)}
+                        className="finder-option"
+                        data-selected={selected || undefined}
+                        aria-pressed={selected}
+                      >
+                        <span className="finder-option__icon">
+                          <FinderIcon name={o.icon} />
+                        </span>
+                        <span className="finder-option__text">
+                          <span className="finder-option__label">{o.label}</span>
+                          <span className="finder-option__note">{o.note}</span>
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
+            {done && (
+              <div className="finder__result">
+                <p className="tech-label text-[var(--rava-light)]">Recommended</p>
+                <p className="mt-3 text-[var(--step-sub)] font-black text-[var(--rava-pale)]">
+                  Temperature-controlled RAVA unit
+                </p>
+                <dl className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {picks.map((p, i) => (
+                    <div key={i}>
+                      <dt className="text-[var(--step-label)] text-[var(--rava-mist)]">
+                        {finderSteps[i].question}
+                      </dt>
+                      <dd className="mt-1 text-[var(--rava-pale)]" style={{ fontSize: '1rem' }}>
+                        {p}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </section>

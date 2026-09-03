@@ -13,6 +13,8 @@ interface Props {
   minH?: string;
   /** 'light' = opaque white editorial block (hides the 3D canvas behind it) */
   tone?: 'dark' | 'light';
+  /** override the eyebrow label colour (e.g. white over a dark scrim) */
+  labelColor?: string;
 }
 
 /** Inverts the token roles so every child component re-themes for a light ground. */
@@ -37,6 +39,7 @@ export function SectionShell({
   className = '',
   minH,
   tone = 'dark',
+  labelColor,
 }: Props) {
   const ref = useRef<HTMLElement>(null);
   useSectionScrub(ref, id);
@@ -60,7 +63,11 @@ export function SectionShell({
               {index}
             </span>
           )}
-          {label && <span className="tech-label">{label}</span>}
+          {label && (
+            <span className="tech-label" style={labelColor ? { color: labelColor } : undefined}>
+              {label}
+            </span>
+          )}
         </div>
       )}
       {children}

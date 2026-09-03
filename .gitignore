@@ -7,3 +7,14 @@ dist-ssr
 !.vscode/extensions.json
 .idea
 *.log
+
+# env
+.env
+.env.*
+!.env.example
+
+# vercel
+.vercel
+
+# claude code local state
+.claude

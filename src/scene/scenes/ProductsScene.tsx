@@ -1,50 +1,132 @@
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useTexture } from '@react-three/drei';
-import { Group, SRGBColorSpace, MathUtils } from 'three';
+import { useTexture, useGLTF } from '@react-three/drei';
+import {
+  Color,
+  Group,
+  type Mesh,
+  type MeshStandardMaterial,
+  SRGBColorSpace,
+  MathUtils,
+} from 'three';
 import { useSteel, SteelBox, type Steel } from '../parts';
 import { RAVA } from '../palette';
-import { sceneState, sectionProgress } from '@/store/scene';
+import { sceneState, sectionProgress, useScene } from '@/store/scene';
 import { clamp, lerp } from '@/animations/easing';
 
 const GAP = 16;
 const IDS = ['refrigerated', 'blast-freezer', 'dry', 'gensets', 'chassis', 'parts'] as const;
 
-function Reefer({ steel, frost = false }: { steel: Steel; frost?: boolean }) {
-  const logo = useTexture('/brand/rava-logo.png');
+const MODEL_URL = '/models/container.glb';
+useGLTF.preload(MODEL_URL);
+
+/** The real purchased reefer (same asset as the hero), tinted per variant. */
+function GlbReefer({ frost = false }: { frost?: boolean }) {
+  const gltf = useGLTF(MODEL_URL);
+  const logo = useTexture('/brand/rava-decal.png');
   logo.colorSpace = SRGBColorSpace;
+  logo.anisotropy = 8;
+
+  const model = useMemo(() => {
+    const root = gltf.scene.clone(true);
+    const tint = new Color(frost ? '#d3e2f0' : '#ffffff');
+    root.traverse((o) => {
+      const m = o as Mesh;
+      if (!m.isMesh) return;
+      m.castShadow = false;
+      m.receiveShadow = false;
+      const src = Array.isArray(m.material) ? m.material : [m.material];
+      const swapped = src.map((mm) => {
+        const mat = (mm as MeshStandardMaterial).clone();
+        mat.color = tint.clone();
+        mat.envMapIntensity = 0.6;
+        return mat;
+      });
+      m.material = Array.isArray(m.material) ? swapped : swapped[0];
+    });
+    return root;
+  }, [gltf.scene, frost]);
+
   return (
-    <group>
-      <SteelBox args={[7, 2.5, 2.42]} steel={steel} color={frost ? '#dfeaf1' : RAVA.white} />
-      {/* refrigeration unit on -X end */}
-      <mesh position={[-3.7, 1.25, 0]}>
-        <boxGeometry args={[0.5, 2.3, 2.3]} />
-        <meshStandardMaterial color="#c9ced4" metalness={0.5} roughness={0.46} />
+    <group rotation={[0, Math.PI / 2, 0]} scale={1.08} position={[0, -0.02, 0]}>
+      <primitive object={model} />
+      {/* RAVA mark on the long side */}
+      <mesh position={[-1.24, 0.05, 0]} rotation={[0, -Math.PI / 2, 0]} renderOrder={3}>
+        <planeGeometry args={[0.62, 0.82]} />
+        <meshStandardMaterial
+          map={logo}
+          transparent
+          opacity={0.9}
+          depthWrite={false}
+          roughness={0.72}
+          metalness={0.04}
+          polygonOffset
+          polygonOffsetFactor={-6}
+          polygonOffsetUnits={-6}
+        />
       </mesh>
-      {[-0.55, 0.55].map((z, i) => (
-        <mesh key={i} position={[-3.98, 1.5, z]} rotation={[0, Math.PI / 2, 0]}>
-          <cylinderGeometry args={[0.32, 0.32, 0.14, 24]} />
-          <meshStandardMaterial color="#4a525b" metalness={0.5} roughness={0.6} />
-        </mesh>
-      ))}
-      {/* corner castings */}
-      {[-3.5, 3.5].flatMap((x) =>
-        [0.16, 2.44].flatMap((y) =>
-          [1.2, -1.2].map((z, i) => (
-            <mesh key={`${x}-${y}-${i}`} position={[x, y, z]}>
+      {frost && (
+        <>
+          <mesh>
+            <boxGeometry args={[2.55, 2.75, 6.9]} />
+            <meshStandardMaterial
+              color={RAVA.mist}
+              transparent
+              opacity={0.12}
+              roughness={1}
+              depthWrite={false}
+            />
+          </mesh>
+        </>
+      )}
+    </group>
+  );
+}
+
+/** Corner castings sit on the 8 corners of a box centred on the group origin. */
+function CornerCastings({ x = 3.34, y = 1.11, z = 1.07 }: { x?: number; y?: number; z?: number }) {
+  return (
+    <>
+      {[-x, x].flatMap((cx) =>
+        [-y, y].flatMap((cy) =>
+          [z, -z].map((cz, i) => (
+            <mesh key={`${cx}-${cy}-${i}`} position={[cx, cy, cz]}>
               <boxGeometry args={[0.32, 0.28, 0.28]} />
               <meshStandardMaterial color="#3b4653" metalness={0.7} roughness={0.5} />
             </mesh>
           )),
         ),
       )}
-      {/* RAVA logo */}
-      <mesh position={[0, 1.4, 1.24]}>
+    </>
+  );
+}
+
+function Reefer({ steel, frost = false }: { steel: Steel; frost?: boolean }) {
+  const logo = useTexture('/brand/rava-logo.png');
+  logo.colorSpace = SRGBColorSpace;
+  return (
+    <group>
+      {/* body is centred on the origin: y in [-1.25, 1.25] */}
+      <SteelBox args={[7, 2.5, 2.42]} steel={steel} color={frost ? '#dfeaf1' : RAVA.white} />
+      {/* refrigeration unit on -X end */}
+      <mesh position={[-3.75, 0, 0]}>
+        <boxGeometry args={[0.5, 2.3, 2.3]} />
+        <meshStandardMaterial color="#c9ced4" metalness={0.5} roughness={0.46} />
+      </mesh>
+      {[-0.55, 0.55].map((z, i) => (
+        <mesh key={i} position={[-4.02, 0.35, z]} rotation={[0, Math.PI / 2, 0]}>
+          <cylinderGeometry args={[0.32, 0.32, 0.14, 24]} />
+          <meshStandardMaterial color="#4a525b" metalness={0.5} roughness={0.6} />
+        </mesh>
+      ))}
+      <CornerCastings />
+      {/* RAVA logo, centred on the long side */}
+      <mesh position={[0, 0, 1.23]}>
         <planeGeometry args={[1.5, 1.98]} />
         <meshStandardMaterial map={logo} transparent roughness={0.7} />
       </mesh>
       {frost && (
-        <mesh position={[0, 1.25, 0]}>
+        <mesh>
           <boxGeometry args={[7.05, 2.55, 2.5]} />
           <meshStandardMaterial color={RAVA.mist} transparent opacity={0.14} roughness={1} />
         </mesh>
@@ -57,21 +139,12 @@ function DryBox({ steel }: { steel: Steel }) {
   return (
     <group>
       <SteelBox args={[7, 2.5, 2.42]} steel={steel} color="#e7ebee" />
-      {/* door seam */}
-      <mesh position={[3.51, 1.25, 0]}>
+      {/* door seam on the +X end */}
+      <mesh position={[3.51, 0, 0]}>
         <boxGeometry args={[0.02, 2.4, 0.04]} />
         <meshStandardMaterial color="#3b4653" metalness={0.6} roughness={0.5} />
       </mesh>
-      {[-3.5, 3.5].flatMap((x) =>
-        [0.16, 2.44].flatMap((y) =>
-          [1.2, -1.2].map((z, i) => (
-            <mesh key={`${x}-${y}-${i}`} position={[x, y, z]}>
-              <boxGeometry args={[0.32, 0.28, 0.28]} />
-              <meshStandardMaterial color="#3b4653" metalness={0.7} roughness={0.5} />
-            </mesh>
-          )),
-        ),
-      )}
+      <CornerCastings />
     </group>
   );
 }
@@ -162,13 +235,13 @@ function PartsRack() {
           <meshStandardMaterial color="#8f9aa8" metalness={0.5} roughness={0.5} />
         </mesh>
       ))}
-      {/* boxes */}
+      {/* boxes — resting on the two shelves (y -0.7 and y 0.5) */}
       {[
-        [-0.8, -0.35, 0],
-        [0.2, -0.35, 0.2],
-        [0.9, -0.4, -0.3],
-        [-0.6, 0.9, 0.1],
-        [0.5, 0.86, -0.2],
+        [-0.8, -0.42, 0],
+        [0.2, -0.42, 0.2],
+        [0.9, -0.42, -0.3],
+        [-0.6, 0.78, 0.1],
+        [0.5, 0.78, -0.2],
       ].map((p, i) => (
         <mesh key={i} position={p as [number, number, number]}>
           <boxGeometry args={[0.6, 0.5, 0.6]} />
@@ -183,6 +256,8 @@ export function ProductsScene() {
   const rail = useRef<Group>(null);
   const steel = useSteel();
   const models = useRef<(Group | null)[]>([]);
+  const tier = useScene((s) => s.tier);
+  const useGlb = tier !== 'low';
 
   useFrame((_, dt) => {
     dt = Math.min(dt, 1 / 30);
@@ -212,8 +287,10 @@ export function ProductsScene() {
     <group ref={rail} position={[0, -0.3, 0]}>
       {IDS.map((id, i) => (
         <group key={id} ref={(el) => (models.current[i] = el)} position={[i * GAP, 0, 0]}>
-          {id === 'refrigerated' && <Reefer steel={steel} />}
-          {id === 'blast-freezer' && <Reefer steel={steel} frost />}
+          {id === 'refrigerated' &&
+            (useGlb ? <GlbReefer /> : <Reefer steel={steel} />)}
+          {id === 'blast-freezer' &&
+            (useGlb ? <GlbReefer frost /> : <Reefer steel={steel} frost />)}
           {id === 'dry' && <DryBox steel={steel} />}
           {id === 'gensets' && <Genset />}
           {id === 'chassis' && <Chassis />}

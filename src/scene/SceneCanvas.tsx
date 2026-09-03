@@ -1,16 +1,15 @@
 import { Suspense, useMemo, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { GradientTexture, Preload } from '@react-three/drei';
-import { ACESFilmicToneMapping, BackSide, Color } from 'three';
+import { Preload } from '@react-three/drei';
+import { ACESFilmicToneMapping, BackSide, Color, ShaderMaterial } from 'three';
 import { useScene, type SectionId } from '@/store/scene';
 import { RAVA, ENVIRONMENTS, type EnvironmentKey } from './palette';
+import { bgState, bgColors } from './bgState';
 import { Studio } from './lighting/Studio';
 import { FrameSync } from './FrameSync';
 import { SceneDirector } from './rig/SceneDirector';
 import { ProductsScene } from './scenes/ProductsScene';
-import { ServiceScene } from './scenes/ServiceScene';
-import { IndustriesScene } from './scenes/IndustriesScene';
-import { CoverageGlobe } from './scenes/CoverageGlobe';
+import { RavaCoverageGlobe } from './scenes/RavaCoverageGlobe';
 import { createContainerDriver } from './containerDriver';
 import type { ContainerDetail } from './RavaContainer';
 
@@ -28,37 +27,82 @@ const ENV_BY_CHOICE: Record<string, EnvironmentKey> = {
 
 const ENV_BY_SECTION: Partial<Record<string, EnvironmentKey>> = {
   industries: 'cold',
-  service: 'construction',
   coverage: 'logistics',
 };
 
-/** Large RAVA-blue gradient backdrop — brand ground, never black. The
- *  per-section colour shift is carried by the fog + clear colour (EnvTint). */
-function Backdrop() {
+/**
+ * Scroll-reactive RAVA gradient sky. A vertical two-stop gradient whose colours
+ * ride the `bgState.phase` ramp (near-black navy -> deep navy -> blue atmosphere
+ * -> dark navy) defined once in bgState.ts. Every colour is keyed end to end and
+ * eased per frame -> continuous, no seams, no flashes.
+ */
+function Backdrop({ env }: { env: EnvironmentKey }) {
+  const mat = useRef<ShaderMaterial>(null);
+  const envFog = useMemo(() => new Color(ENVIRONMENTS[env].fog), [env]);
+  const uniforms = useMemo(
+    () => ({
+      uTop: { value: new Color('#0a1322') },
+      uBottom: { value: new Color('#05080f') },
+    }),
+    [],
+  );
+
+  useFrame((_, dt) => {
+    dt = Math.min(dt, 1 / 30);
+    const a = 1 - Math.exp(-2.5 * dt);
+    if (mat.current) {
+      const top = mat.current.uniforms.uTop.value as Color;
+      const bot = mat.current.uniforms.uBottom.value as Color;
+      bgColors(bgState.phase, _tmpTop, _tmpBot);
+      // only tint toward the active section's env colour once fully outside,
+      // and not at all once the stage has lifted to the light product tone
+      const envMix = bgState.ext * (1 - bgState.light);
+      _tmpTop.lerp(envFog, 0.18 * envMix);
+      _tmpBot.lerp(envFog, 0.3 * envMix);
+      top.lerp(_tmpTop, a);
+      bot.lerp(_tmpBot, a);
+    }
+  });
+
   return (
-    <mesh scale={200} renderOrder={-1} rotation={[0, 0, 0]}>
-      <sphereGeometry args={[1, 40, 40]} />
-      <meshBasicMaterial side={BackSide} toneMapped={false} depthWrite={false}>
-        <GradientTexture
-          stops={[0, 0.35, 0.65, 1]}
-          colors={['#3a577c', RAVA.blue, RAVA.deep, RAVA.navy]}
-          size={512}
-        />
-      </meshBasicMaterial>
+    <mesh scale={220} renderOrder={-1}>
+      <sphereGeometry args={[1, 48, 48]} />
+      <shaderMaterial
+        ref={mat}
+        side={BackSide}
+        depthWrite={false}
+        toneMapped={false}
+        uniforms={uniforms}
+        vertexShader={`varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`}
+        fragmentShader={`
+          uniform vec3 uTop; uniform vec3 uBottom; varying vec3 vP;
+          void main(){
+            float h = clamp(vP.y * 0.5 + 0.5, 0.0, 1.0);
+            h = pow(h, 1.15);
+            gl_FragColor = vec4(mix(uBottom, uTop, h), 1.0);
+          }`}
+      />
     </mesh>
   );
 }
+const _tmpTop = new Color();
+const _tmpBot = new Color();
+const _cc = new Color();
 
-/** Eases fog + clear colour toward the active section's tint. */
+/** Keeps the fog + clear colour locked to the backdrop's lower colour so the
+ *  horizon never shows a seam through the whole cinematic. */
 function EnvTint({ env }: { env: EnvironmentKey }) {
   const target = useMemo(() => new Color(ENVIRONMENTS[env].fog), [env]);
   useFrame(({ scene, gl }, dt) => {
     dt = Math.min(dt, 1 / 30);
     const a = 1 - Math.exp(-2 * dt);
-    if (scene.fog && 'color' in scene.fog) (scene.fog.color as Color).lerp(target, a);
-    const cc = new Color();
-    gl.getClearColor(cc);
-    gl.setClearColor(cc.lerp(target, a));
+    bgColors(bgState.phase, _tmpTop, _tmpBot);
+    _tmpBot.lerp(target, 0.25 * bgState.ext * (1 - bgState.light));
+    if (scene.fog && 'color' in scene.fog) (scene.fog.color as Color).lerp(_tmpBot, a);
+    gl.getClearColor(_cc);
+    gl.setClearColor(_cc.lerp(_tmpBot, a));
+    // exposure ride — geometry only (backdrop shader is toneMapped:false)
+    gl.toneMappingExposure += (bgState.exposure - gl.toneMappingExposure) * (1 - Math.exp(-3 * dt));
   });
   return null;
 }
@@ -108,28 +152,25 @@ export function SceneCanvas() {
           stencil: false,
           depth: true,
         }}
-        // near pushed well past 0 -> big depth-buffer precision win = no z-fight crawl
-        camera={{ fov: 42, near: 0.25, far: 260, position: [-2.4, 0.05, 0.05] }}
+        camera={{ fov: 58, near: 0.3, far: 300, position: [1.9, -0.42, 0.22] }}
         onCreated={({ gl }) => {
-          gl.setClearColor(RAVA.navy);
+          gl.setClearColor('#05080f');
           gl.toneMapping = ACESFilmicToneMapping;
-          gl.toneMappingExposure = 1.12;
+          gl.toneMappingExposure = 1.42;
         }}
       >
-        <fog attach="fog" args={[RAVA.navy, 22, 120]} />
+        <fog attach="fog" args={['#0b1524', 22, 140]} />
         <FrameSync />
         <EnvTint env={env} />
-        <Backdrop />
+        <Backdrop env={env} />
         <Ground />
 
         <SceneDirector driver={driver} detail={detail} />
         <Studio env={env} />
 
         <Suspense fallback={null}>
-          {near(active, 'solutions', 'products', 'industries') && <ProductsScene />}
-          {near(active, 'products', 'industries', 'rent-buy') && <IndustriesScene />}
-          {near(active, 'rent-buy', 'service', 'coverage') && <ServiceScene />}
-          {near(active, 'service', 'coverage', 'final') && <CoverageGlobe />}
+          {near(active, 'solutions', 'products') && <ProductsScene />}
+          {near(active, 'rent-buy', 'coverage', 'final') && <RavaCoverageGlobe />}
         </Suspense>
 
         {!reducedMotion && <Preload all />}

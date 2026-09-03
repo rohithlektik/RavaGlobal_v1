@@ -12,8 +12,10 @@ export interface ContainerDriver {
   power: number;
   /** logo decal resolve: 0 hidden, 1 crisp */
   logoReveal: number;
-  /** interior lift used in the hero -> world handoff */
+  /** interior refrigerated lighting: 0 dark navy, 1 full clean white */
   interior: number;
+  /** floating ice / frost particles: 0 none, 1 full */
+  ice: number;
 }
 
 export const createContainerDriver = (): ContainerDriver => ({
@@ -22,4 +24,5 @@ export const createContainerDriver = (): ContainerDriver => ({
   power: 0,
   logoReveal: 0,
   interior: 0,
+  ice: 0,
 });

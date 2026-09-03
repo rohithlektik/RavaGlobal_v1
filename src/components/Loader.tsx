@@ -5,41 +5,52 @@ import { Logo } from './Logo';
 
 /**
  * Short, purposeful loading sequence: RAVA mark + a thin RAVA-blue progress
- * indicator. Resolves on real asset progress (or a 2.2s ceiling) then hands off.
+ * indicator. Completion is gated on the REAL asset progress (the container .glb
+ * + its textures, tracked by drei's loading manager) so the intro never starts
+ * against an empty scene. A long ceiling is only a stall guard. The on-screen
+ * number is eased purely for looks and never gates completion.
  */
 export function Loader() {
   const { progress, active } = useProgress();
   const setLoaded = useScene((s) => s.setLoaded);
   const [done, setDone] = useState(false);
-  const shown = useRef(Math.max(progress, 6));
 
-  // ease the number upward so it never stalls or snaps
+  // real readiness — assets fully parsed and nothing left in flight
+  const ready = progress >= 99.5 && !active;
+
+  useEffect(() => {
+    if (!ready) return;
+    const id = setTimeout(() => {
+      setDone(true);
+      setLoaded(true);
+    }, 220);
+    return () => clearTimeout(id);
+  }, [ready, setLoaded]);
+
+  // stall guard — if the loading manager never settles (a 404 texture, say),
+  // release anyway well after a genuine slow load would have finished.
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setDone(true);
+      setLoaded(true);
+    }, 14000);
+    return () => clearTimeout(id);
+  }, [setLoaded]);
+
+  // eased on-screen number — cosmetic only
+  const shown = useRef(6);
   const [display, setDisplay] = useState(6);
   useEffect(() => {
     let raf = 0;
     const tick = () => {
-      shown.current += (Math.max(progress, shown.current) - shown.current) * 0.12 + 0.4;
-      const v = Math.min(100, shown.current);
-      setDisplay(v);
-      if (v >= 99.5 && !active) {
-        setTimeout(() => {
-          setDone(true);
-          setLoaded(true);
-        }, 240);
-        return;
-      }
-      raf = requestAnimationFrame(tick);
+      const target = done ? 100 : Math.max(progress, shown.current);
+      shown.current += (target - shown.current) * 0.14 + 0.5;
+      setDisplay(Math.min(100, shown.current));
+      if (shown.current < 100) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    const ceiling = setTimeout(() => {
-      setDone(true);
-      setLoaded(true);
-    }, 2600);
-    return () => {
-      cancelAnimationFrame(raf);
-      clearTimeout(ceiling);
-    };
-  }, [progress, active, setLoaded]);
+    return () => cancelAnimationFrame(raf);
+  }, [progress, done]);
 
   return (
     <div className={`loader${done ? ' is-done' : ''}`} role="status" aria-live="polite">
