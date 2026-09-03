@@ -1323,8 +1323,9 @@
 .solution-cta__title {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: clamp(2.6rem, 1.3rem + 6vw, 6rem);
-  line-height: 0.94;
+  /* -20% */
+  font-size: clamp(2.08rem, 1.04rem + 4.8vw, 4.8rem);
+  line-height: 0.96;
   letter-spacing: -0.03em;
   background: linear-gradient(180deg, #ffffff 0%, #ffffff 44%, #c3d9ef 100%); /* white -> rava mist */
   -webkit-background-clip: text;
